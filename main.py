@@ -1,14 +1,12 @@
-
-
 import time
 import datetime
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import ActionChains
 from credentials import user_name,password
-from names import members
+from names import members,cabinents
 
-filename = 'owasp1.txt'
+filename = 'owasp2.txt' ## file name here
 
 # initializing selenium
 def init():
@@ -76,8 +74,8 @@ def check_xpath(driver,path):
 def send_confirmation(driver,base_path):
     dm_page = driver.find_element_by_xpath(base_path+"/a/div").click()
     time.sleep(1)
-    # textarea = driver.find_element_by_xpath("/html/body/div[1]/section/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div/div[2]/textarea")
-    # textarea.send_keys("[OWASP BOT]: Thank you for sharing our Story.\n")
+    textarea = driver.find_element_by_xpath("/html/body/div[1]/section/div/div[2]/div/div/div[2]/div[2]/div/div[2]/div/div/div[2]/textarea")
+    textarea.send_keys("[OWASP BOT(test1)]: Thank you for sharing our Story.\n")
     driver.back()
 
 # validates the users
@@ -90,6 +88,8 @@ def validation(driver,username,base_path):
         file = open(filename,'a')
         file.writelines(username+"\n")
         file.close()
+        return True
+    return False
 
 # gets the time of the recent post
 def time_of_recent_post(driver,url):
@@ -119,12 +119,11 @@ def parentlist(driver,parent_base_path):
 def brain(driver,post_time):
     open_messages(driver)
 
-    file = open(filename,'a')
-    file.writelines(str(datetime.datetime.now())+"\n")
-    file.close()
-    print("WAITING....")
+    print("\nWAITING....\n\n")
     prev_person = None
     index = 0
+    time.sleep(1)
+
     while(True):
         time.sleep(1)
         # print("HELLO!!! I'm Scroller I scroll instagram for you")
@@ -135,17 +134,17 @@ def brain(driver,post_time):
 
         names = parentlist(driver,parent_base_path)
 
-        if prev_person != None and prev_person not in names:
-            print(prev_person)
-            while True:
-                names = parentlist(driver,parent_base_path)
-                i = driver.find_element_by_xpath(parent_base_path + "[" + str(index + 7) + "]")
-                a = ActionChains(driver)
-                a.move_to_element(i).perform()
-                print("PANIC FUNCTION ACTIVATED")
-                time.sleep(0.5)
-                if prev_person in names and names[-1]!=prev_person:
-                    break
+        # if prev_person != None and prev_person not in names:
+        #     print(prev_person)
+        #     while True:
+        #         names = parentlist(driver,parent_base_path)
+        #         i = driver.find_element_by_xpath(parent_base_path + "[" + str(index + 7) + "]")
+        #         a = ActionChains(driver)
+        #         a.move_to_element(i).perform()
+        #         print("PANIC FUNCTION ACTIVATED")
+        #         time.sleep(0.5)
+        #         if prev_person in names and names[-1]!=prev_person:
+        #             break
 
         if (prev_person != None):
             index = names.index(prev_person)+1
@@ -159,7 +158,8 @@ def brain(driver,post_time):
         story_time_mod = datetime.datetime.strptime(story_time, '%Y-%m-%dT%H:%M:%S.%fZ')
         if (story_time_mod < post_time):
             print("SAFELY QUITTING...")
-            exit(1)
+            # exit(1)
+            return True
             break
 
         # username extraction
@@ -168,19 +168,22 @@ def brain(driver,post_time):
         print("MEMBERS:", members_username)
 
         # username validation and verification
-        if (members_username in members):
+        if (members_username in members) or (members_name in cabinents):
             print("OWASP MEMBERS:",members_username)
-            validation(driver, members_name.text,base_path)
+            status = validation(driver, members_name.text,base_path)
+            if (status):
+                return False
 
         i = driver.find_element_by_xpath(parent_base_path+"["+str(index+5)+"]")
         a = ActionChains(driver)
         a.move_to_element(i).perform()
         prev_person = names[index]
         print()
-    # block()
+    block()
 
 # this is a blocker to stop the browser from closing
 def block():
+    print("BLOCKING FOR YOU")
     num = 0
     while(True):
         num+=1
@@ -191,8 +194,15 @@ def main():
     driver = init()
     login(driver)
     post_time = time_of_recent_post(driver,url)
-    brain(driver,post_time)
+    file = open(filename,'a')
+    file.writelines("\n"+str(datetime.datetime.now())+"\n\n")
+    file.close()
+    while True:
+        terms_of_exits = brain(driver,post_time)
+        print(terms_of_exits,"phewwww")
+        if (terms_of_exits):
+            break
+
 
 if __name__ == '__main__':
     main()
-
